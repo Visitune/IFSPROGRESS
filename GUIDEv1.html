@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide Interactif IFS Progress</title>
+    <style>
+        :root {
+            --primary-color: #005A87; /* Bleu IFS Progress */
+            --secondary-color: #B3D4E5; /* Bleu clair */
+            --dark-text: #333;
+            --light-text: #fff;
+            --hover-color: #004466; /* Bleu plus foncé */
+            --light-bg: #f8f9fa;
+            --border-color: #dee2e6;
+            --badge-base-bg: #28a745; /* Vert pour Base */
+            --badge-inter-bg: #ffc107; /* Orange pour Intermédiaire */
+            --badge-inter-text: #333;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { line-height: 1.6; color: var(--dark-text); background-color: var(--light-bg); }
+        .container { display: flex; min-height: 100vh; }
+        .sidebar { width: 350px; background-color: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; position: sticky; top: 0; height: 100vh; padding: 20px 0; display: flex; flex-direction: column; }
+        .logo { text-align: center; padding: 20px; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .logo h1 { color: var(--primary-color); font-size: 28px; margin-bottom: 5px; }
+        .logo p { font-size: 14px; color: var(--dark-text); }
+        .nav { flex-grow: 1; overflow-y: auto; }
+        .nav-item { cursor: pointer; padding: 12px 20px; border-bottom: 1px solid var(--border-color); transition: background-color 0.3s; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .nav-item:hover { background-color: var(--secondary-color); color: var(--dark-text); }
+        .nav-item.active { background-color: var(--primary-color); color: var(--light-text); }
+        .nav-item .icon { transition: transform 0.3s; font-size: 20px; line-height: 1; }
+        .nav-item.active .icon { transform: rotate(90deg); }
+        .sub-nav { display: none; padding-left: 15px; background-color: #f8f8f8; border-left: 3px solid var(--primary-color); margin-left: 5px; }
+        .sub-nav.active { display: block; }
+        .sub-nav-item { padding: 10px 20px; cursor: pointer; transition: background-color 0.3s; border-bottom: 1px solid #eee; font-size: 14px; }
+        .sub-nav-item:hover { background-color: #e9e9e9; }
+        .sub-nav-item.active { background-color: var(--secondary-color); color: var(--dark-text); font-weight: bold; }
+        .content { flex: 1; padding: 30px; max-width: 1000px; margin: 0 auto; }
+        .section { display: none; animation: fadeIn 0.5s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section-header { margin-bottom: 30px; padding-bottom: 15px; border-bottom: 3px solid var(--primary-color); }
+        .section-header h2 { color: var(--primary-color); font-size: 32px; margin-bottom: 10px; }
+        .section-header p { color: #666; font-size: 16px; }
+        .requirement { background-color: #fff; border-radius: 8px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid var(--border-color); }
+        .requirement-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .requirement-number { font-weight: bold; color: var(--primary-color); margin-right: 15px; font-size: 18px; }
+        .requirement-title { flex: 1; font-weight: bold; font-size: 17px; }
+        .level-badge { color: white; padding: 4px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; margin-left: 10px; white-space: nowrap; }
+        .level-badge.base { background-color: var(--badge-base-bg); }
+        .level-badge.intermediaire { background-color: var(--badge-inter-bg); color: var(--badge-inter-text); }
+        .requirement-content { display: none; border-top: 1px solid #eee; padding-top: 20px; margin-top: 15px; }
+        .requirement-content.active { display: block; }
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap;}
+        .tab { padding: 10px 15px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s; font-size: 14px; color: #555; text-align: center; }
+        .tab:hover { background-color: #f5f5f5; color: var(--dark-text); }
+        .tab.active { border-bottom: 3px solid var(--primary-color); font-weight: bold; color: var(--primary-color); }
+        .tab-content { display: none; padding: 10px; background-color: #fdfdfd; border: 1px solid #f0f0f0; border-radius: 4px; }
+        .tab-content.active { display: block; }
+        .search-container { padding: 15px 20px; border-bottom: 1px solid var(--border-color); }
+        .search-input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; }
+        .search-results { max-height: 400px; overflow-y: auto; margin-top: 10px; display: none; background-color: white; border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: absolute; width: 310px; z-index: 1000; }
+        .search-result-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .search-result-item:hover { background-color: #f0f0f0; }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item strong { color: var(--primary-color); }
+        .search-result-item small { display: block; color: #777; margin-top: 4px; font-style: italic; }
+        .highlight { background-color: #fff3cd; font-weight: bold; padding: 1px 3px; border-radius: 3px; }
+        .level-selector { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-around; background-color: #f8f8f8; }
+        .level-selector label { cursor: pointer; display: flex; align-items: center; font-size: 14px; }
+        .level-selector input { margin-right: 5px; }
+        .back-to-top { position: fixed; bottom: 20px; right: 20px; background-color: var(--primary-color); color: var(--light-text); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; opacity: 0; transition: opacity 0.3s, transform 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 100; font-size: 24px; transform: translateY(20px); }
+        .back-to-top.visible { opacity: 1; transform: translateY(0); }
+        .toggle-menu { display: none; position: fixed; top: 15px; left: 15px; background-color: var(--primary-color); color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; z-index: 1001; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        @media (max-width: 900px) { /* Larger breakpoint for tabs */
+            .tabs { flex-direction: column; align-items: stretch; }
+            .tab { border-bottom: 1px solid var(--border-color); border-left: 3px solid transparent; }
+            .tab.active { border-bottom: 1px solid var(--border-color); border-left: 3px solid var(--primary-color); }
+        }
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: fixed; top: 0; left: -100%; transition: left 0.3s ease-in-out; z-index: 1000; max-height: 100vh; }
+            .sidebar.active { left: 0; }
+            .content { padding: 80px 20px 20px 20px; }
+            .toggle-menu { display: block; }
+        }
+    </style>
+</head>
+<body>
+    <button class="toggle-menu" id="toggle-menu">Menu</button>
+
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="logo">
+                <h1>IFS Progress</h1>
+                <p>Guide Interactif de la Norme</p>
+            </div>
+            
+            <div class="level-selector" id="level-selector">
+                <label><input type="radio" name="level" value="Tous" checked> Tous</label>
+                <label><input type="radio" name="level" value="Base"> Base</label>
+                <label><input type="radio" name="level" value="Intermédiaire"> Intermédiaire</label>
+            </div>
+
+            <div class="search-container">
+                <input type="text" class="search-input" id="search-input" placeholder="Rechercher une exigence...">
+                <div class="search-results" id="search-results"></div>
+            </div>
+
+            <div class="nav" id="navigation-menu">
+                <!-- La navigation sera générée dynamiquement ici -->
+            </div>
+        </div>
+
+        <div class="content" id="main-content">
+            <!-- Le contenu sera généré dynamiquement ici -->
+        </div>
+    </div>
+
+    <div class="back-to-top" id="back-to-top">↑</div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Éléments du DOM
+        const navMenu = document.getElementById('navigation-menu');
+        const mainContent = document.getElementById('main-content');
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
+        const backToTopButton = document.getElementById('back-to-top');
+        const toggleMenuButton = document.getElementById('toggle-menu');
+        const sidebar = document.getElementById('sidebar');
+        const levelSelector = document.getElementById('level-selector');
+
+        let ifsData = [];
+        let currentLevel = 'Tous';
+        let currentSectionId = null;
+
+        /**
+         * Charge les données de la norme depuis le fichier JSON.
+         */
+        async function loadData() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/M00N69/CSVINSIGHT/main/IFSPROGRESSGEMv0.json');
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+                ifsData = await response.json();
+                buildNavigation();
+                showWelcomeMessage();
+            } catch (error) {
+                console.error("Impossible de charger les données de la norme:", error);
+                mainContent.innerHTML = `<div class="section active"><div class="section-header"><h2>Erreur de chargement</h2><p>Impossible de charger le fichier de données. Veuillez vérifier la console du navigateur pour plus de détails.</p></div></div>`;
+            }
+        }
+
+        /**
+         * Construit le menu de navigation à partir des données chargées.
+         */
+        function buildNavigation() {
+            navMenu.innerHTML = '';
+            ifsData.forEach(chapter => {
+                const navItem = document.createElement('div');
+                navItem.className = 'nav-item';
+                navItem.dataset.target = `nav-chap-${chapter.chapitre}`;
+                navItem.innerHTML = `<span>${chapter.chapitre}. ${chapter.titre}</span><span class="icon">›</span>`;
+
+                const subNav = document.createElement('div');
+                subNav.className = 'sub-nav';
+                subNav.id = `nav-chap-${chapter.chapitre}`;
+
+                const sortedSubsections = chapter.sous_sections.sort((a, b) => 
+                    a.sous_section.localeCompare(b.sous_section, undefined, { numeric: true, sensitivity: 'base' })
+                );
+
+                sortedSubsections.forEach(subsection => {
+                    const subNavItem = document.createElement('div');
+                    subNavItem.className = 'sub-nav-item';
+                    subNavItem.dataset.sectionId = `chap${chapter.chapitre}-sec${subsection.sous_section.replace(/\./g, '_')}`;
+                    subNavItem.textContent = `${subsection.sous_section} ${subsection.titre}`;
+                    subNav.appendChild(subNavItem);
+                });
+
+                navMenu.appendChild(navItem);
+                navMenu.appendChild(subNav);
+            });
+        }
+
+        /**
+         * Affiche une section spécifique basée sur son ID, en filtrant par niveau.
+         * @param {string} sectionId - L'ID de la section à afficher (ex: "chap1-sec1_1")
+         */
+        function displaySection(sectionId) {
+            currentSectionId = sectionId;
+            const match = sectionId.match(/chap(\d+)-sec([\d_]+)/);
+            if (!match) {
+                showWelcomeMessage();
+                return;
+            }
+            const chapterNum = match[1];
+            const subSectionNum = match[2].replace(/_/g, '.');
+            
+            const chapter = ifsData.find(c => c.chapitre === chapterNum);
+            const subsection = chapter?.sous_sections.find(s => s.sous_section === subSectionNum);
+
+            if (!subsection) {
+                console.error(`Section ${sectionId} introuvable.`);
+                showWelcomeMessage();
+                return;
+            }
+            
+            const filteredRequirements = subsection.exigences.filter(req => {
+                if (currentLevel === 'Tous') return true;
+                if (currentLevel === 'Base') return req.niveau === 'Base';
+                if (currentLevel === 'Intermédiaire') return req.niveau === 'Base' || req.niveau === 'Intermédiaire';
+                return false;
+            });
+
+            mainContent.innerHTML = '';
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'section active';
+            sectionDiv.id = sectionId;
+
+            let headerHtml = `
+                <div class="section-header">
+                    <h2>${subsection.sous_section} ${subsection.titre}</h2>
+                    <p>Chapitre ${chapter.chapitre}: ${chapter.titre}</p>
+                </div>
+            `;
+            
+            let requirementsHtml = filteredRequirements.map(req => {
+                if (!req.numero) return '';
+                
+                const levelClass = req.niveau.toLowerCase().replace(/é/g, 'e');
+                const levelBadge = `<span class="level-badge ${levelClass}">${req.niveau}</span>`;
+                const reqIdSuffix = req.numero.replace(/[^a-zA-Z0-9]/g, '');
+
+                const formatText = (text) => {
+                    if (!text) return '<p><i>Non applicable.</i></p>';
+                    // Convertir les listes à puces simples en listes HTML
+                    let formatted = text.replace(/</g, "<").replace(/>/g, ">");
+                    formatted = formatted.replace(/^\s*•\s*(.*)/gm, '<li>$1</li>');
+                    if (formatted.includes('<li>')) {
+                       formatted = '<ul>' + formatted.replace(/<\/li>\s*<li>/g, '</li><li>') + '</ul>';
+                    }
+                    return `<div style="white-space: pre-wrap; font-family: inherit; margin: 0;">${formatted.replace(/\n/g, '<br>')}</div>`;
+                };
+
+                return `
+                    <div class="requirement" id="req-${reqIdSuffix}">
+                        <div class="requirement-header">
+                            <span class="requirement-number">${req.numero}</span>
+                            <span class="requirement-title">${(req.texte || "").split('\n')[0]}</span>
+                            ${levelBadge}
+                        </div>
+                        <div class="requirement-content">
+                            <div class="tabs">
+                                <div class="tab active" data-tab-content="details-${reqIdSuffix}">Détails</div>
+                                <div class="tab" data-tab-content="questions-${reqIdSuffix}">Questions d'audit</div>
+                                <div class="tab" data-tab-content="explications-${reqIdSuffix}">Explications</div>
+                                <div class="tab" data-tab-content="preuves-${reqIdSuffix}">Exemples de preuves</div>
+                            </div>
+                            <div id="details-${reqIdSuffix}" class="tab-content active">${formatText(req.texte)}</div>
+                            <div id="questions-${reqIdSuffix}" class="tab-content">${formatText(Array.isArray(req.onglets.questionsExemple) ? req.onglets.questionsExemple.map(q => `• ${q}`).join('\n') : req.onglets.questionsExemple)}</div>
+                            <div id="explications-${reqIdSuffix}" class="tab-content">${formatText(req.onglets.explications)}</div>
+                            <div id="preuves-${reqIdSuffix}" class="tab-content">${formatText(req.onglets.exemples_preuves)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            if(filteredRequirements.length === 0) {
+                 requirementsHtml = `<p>Aucune exigence pour le niveau "${currentLevel}" dans cette section.</p>`;
+            }
+
+            sectionDiv.innerHTML = headerHtml + requirementsHtml;
+            mainContent.appendChild(sectionDiv);
+            
+            updateActiveNav(sectionId);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function showWelcomeMessage() {
+            currentSectionId = null;
+            mainContent.innerHTML = `
+                <div class="section active" id="home-section">
+                     <div class="section-header">
+                        <h2>Bienvenue dans le Guide Interactif IFS Progress</h2>
+                        <p>Naviguez facilement dans les exigences de la norme IFS Progress.</p>
+                    </div>
+                    <div class="requirement">
+                        <h3>Comment utiliser ce guide</h3>
+                        <ul style="margin-left: 20px; margin-top: 10px; padding-left: 20px;">
+                            <li><strong>Filtrer par niveau :</strong> Utilisez les boutons "Base" ou "Intermédiaire" en haut à gauche pour n'afficher que les exigences pertinentes.</li>
+                            <li><strong>Navigation :</strong> Utilisez le menu pour explorer les chapitres et sous-sections.</li>
+                            <li><strong>Recherche :</strong> La barre de recherche trouve des mots-clés dans les exigences du niveau sélectionné.</li>
+                            <li><strong>Détails :</strong> Cliquez sur une exigence pour afficher les onglets avec les questions d'audit, explications et preuves.</li>
+                        </ul>
+                    </div>
+                </div>`;
+            updateActiveNav(null);
+        }
+        
+        function updateActiveNav(sectionId) {
+            document.querySelectorAll('.sub-nav-item.active').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item.active, .sub-nav.active').forEach(el => el.classList.remove('active'));
+            
+            if (sectionId) {
+                const activeSubItem = document.querySelector(`.sub-nav-item[data-section-id="${sectionId}"]`);
+                if (activeSubItem) {
+                    activeSubItem.classList.add('active');
+                    const parentSubNav = activeSubItem.closest('.sub-nav');
+                    if (parentSubNav) {
+                        const parentNavItem = document.querySelector(`.nav-item[data-target="${parentSubNav.id}"]`);
+                        parentNavItem?.classList.add('active');
+                        parentSubNav.classList.add('active');
+                    }
+                }
+            }
+        }
+        
+        function handleSearch(event) {
+            const searchTerm = event.target.value.trim().toLowerCase();
+            searchResults.innerHTML = '';
+            
+            if (searchTerm.length < 3) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            const results = [];
+            const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            
+            ifsData.forEach(chapter => {
+                chapter.sous_sections.forEach(subsection => {
+                    subsection.exigences
+                        .filter(req => { // Filtre par niveau avant la recherche
+                             if (currentLevel === 'Tous') return true;
+                             if (currentLevel === 'Base') return req.niveau === 'Base';
+                             if (currentLevel === 'Intermédiaire') return req.niveau === 'Base' || req.niveau === 'Intermédiaire';
+                             return false;
+                        })
+                        .forEach(req => {
+                            const fullText = `${req.numero} ${req.texte} ${Object.values(req.onglets).join(' ')}`.toLowerCase();
+                            if (fullText.includes(searchTerm)) {
+                                const sectionId = `chap${chapter.chapitre}-sec${subsection.sous_section.replace(/\./g, '_')}`;
+                                const reqIdSuffix = req.numero.replace(/[^a-zA-Z0-9]/g, '');
+                                
+                                let previewText = req.texte;
+                                const matchIndex = previewText.toLowerCase().indexOf(searchTerm);
+                                if (matchIndex > -1) {
+                                    const start = Math.max(0, matchIndex - 40);
+                                    const end = Math.min(previewText.length, matchIndex + searchTerm.length + 40);
+                                    previewText = `...${previewText.substring(start, end).replace(searchRegex, '<mark class="highlight">$&</mark>')}...`;
+                                } else {
+                                    previewText = previewText.substring(0, 90) + '...';
+                                }
+
+                                results.push({
+                                    numero: req.numero,
+                                    titre: req.texte.split('\n')[0],
+                                    preview: previewText,
+                                    sectionId: sectionId,
+                                    reqId: `req-${reqIdSuffix}`
+                                });
+                            }
+                        });
+                });
+            });
+
+            if (results.length > 0) {
+                results.slice(0, 15).forEach(result => {
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+                    item.innerHTML = `<strong>${result.numero}</strong>: ${result.titre}<small>${result.preview}</small>`;
+                    item.addEventListener('click', () => {
+                        displaySection(result.sectionId);
+                        setTimeout(() => {
+                            const targetReq = document.getElementById(result.reqId);
+                            if (targetReq) {
+                                targetReq.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                const content = targetReq.querySelector('.requirement-content');
+                                if (content && !content.classList.contains('active')) content.classList.add('active');
+                            }
+                        }, 200);
+                        searchInput.value = '';
+                        searchResults.style.display = 'none';
+                        if (window.innerWidth <= 768) sidebar.classList.remove('active');
+                    });
+                    searchResults.appendChild(item);
+                });
+                searchResults.style.display = 'block';
+            } else {
+                searchResults.innerHTML = '<div class="search-result-item">Aucun résultat</div>';
+                searchResults.style.display = 'block';
+            }
+        }
+
+        // --- Gestionnaires d'événements ---
+        levelSelector.addEventListener('change', (e) => {
+            currentLevel = e.target.value;
+            // Rafraîchit la vue actuelle avec le nouveau filtre
+            if (currentSectionId) {
+                displaySection(currentSectionId);
+            }
+        });
+
+        navMenu.addEventListener('click', (e) => {
+            const navItem = e.target.closest('.nav-item');
+            const subNavItem = e.target.closest('.sub-nav-item');
+
+            if (navItem) {
+                const targetId = navItem.dataset.target;
+                const subNav = document.getElementById(targetId);
+                const isActive = navItem.classList.contains('active');
+                
+                document.querySelectorAll('.nav-item.active, .sub-nav.active').forEach(el => el.classList.remove('active'));
+
+                if (!isActive) {
+                    navItem.classList.add('active');
+                    subNav?.classList.add('active');
+                }
+            }
+
+            if (subNavItem) {
+                const sectionId = subNavItem.dataset.sectionId;
+                displaySection(sectionId);
+                if (window.innerWidth <= 768) sidebar.classList.remove('active');
+            }
+        });
+
+        mainContent.addEventListener('click', (e) => {
+            const reqHeader = e.target.closest('.requirement-header');
+            const tab = e.target.closest('.tab');
+
+            if (reqHeader) {
+                reqHeader.nextElementSibling.classList.toggle('active');
+            }
+
+            if (tab) {
+                const contentId = tab.dataset.tabContent;
+                const tabContainer = tab.parentElement;
+                const contentContainer = tabContainer.parentElement;
+                
+                tabContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                contentContainer.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(contentId).classList.add('active');
+            }
+        });
+        
+        searchInput.addEventListener('input', handleSearch);
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        backToTopButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        window.addEventListener('scroll', () => {
+            backToTopButton.classList.toggle('visible', window.pageYOffset > 300);
+        });
+
+        toggleMenuButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sidebar.classList.toggle('active');
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (sidebar.classList.contains('active') && !e.target.closest('.sidebar')) {
+                sidebar.classList.remove('active');
+            }
+        });
+        
+        loadData();
+    });
+    </script>
+</body>
+</html>
