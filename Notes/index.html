@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide Auditeur - IFS Progress Food v3.0</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #005A87; --secondary-color: #e8f0fe; --text-primary: #202124;
+            --text-secondary: #5f6368; --border-color: #dadce0; --hover-color: #f1f3f4;
+            --white: #fff; --sidebar-width: 300px; --header-height: 64px; --badge-base: #34a853;
+            --badge-inter: #fbbc04; --error-color: #d93025; --success-color: #1e8e3e;
+            --info-color: #1a73e8; --transition: 0.3s ease; --shadow-light: 0 1px 2px 0 rgba(60, 64, 67, 0.1);
+            --shadow-medium: 0 1px 3px 1px rgba(60, 64, 67, 0.15); --shadow-heavy: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
+        html { scroll-behavior: smooth; }
+        body { color: var(--text-primary); background-color: #f8f9fa; line-height: 1.6; font-size: 16px; overflow-x: hidden; }
+
+        .header { background-color: var(--white); border-bottom: 1px solid var(--border-color); position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); display: flex; align-items: center; padding: 0 24px; z-index: 1000; box-shadow: var(--shadow-light); }
+        .menu-button { background: none; border: none; font-size: 24px; color: var(--text-secondary); cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-right: 16px; }
+        .menu-button:hover { background-color: var(--hover-color); }
+        .logo { display: flex; align-items: center; flex: 1; }
+        .logo h1 { font-size: 20px; font-weight: 500; color: var(--text-primary); margin-left: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .logo img { height: 32px; flex-shrink: 0; }
+        .search-container { position: relative; width: 40%; margin: 0 24px; }
+        .search-bar { display: flex; align-items: center; background-color: var(--hover-color); border-radius: 24px; padding: 0 16px; height: 48px; width: 100%; transition: var(--transition); }
+        .search-bar:focus-within { background-color: var(--white); box-shadow: var(--shadow-medium); }
+        .search-bar input { flex: 1; border: none; background: none; padding: 8px; font-size: 16px; color: var(--text-primary); outline: none; }
+        .search-icon { color: var(--text-secondary); margin-right: 12px; }
+        .search-results { position: absolute; top: 100%; left: 0; right: 0; background-color: var(--white); border-radius: 8px; box-shadow: var(--shadow-heavy); max-height: 400px; overflow-y: auto; z-index: 1001; display: none; margin-top: 8px; }
+        .search-result-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background-color: var(--hover-color); }
+        .search-result-item strong { color: var(--primary-color); }
+        .search-result-item span { font-size: 14px; color: var(--text-secondary); display: block; margin-top: 4px; }
+        
+        .container { display: flex; margin-top: var(--header-height); min-height: calc(100vh - var(--header-height)); }
+        .sidebar { width: var(--sidebar-width); background-color: var(--white); border-right: 1px solid var(--border-color); overflow-y: auto; height: calc(100vh - var(--header-height)); position: fixed; top: var(--header-height); left: 0; transition: transform 0.3s ease; z-index: 900; }
+        .sidebar.hidden { transform: translateX(-100%); }
+        .level-selector { padding: 16px; background-color: var(--white); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-around; flex-wrap: wrap; }
+        .level-selector label { display: flex; align-items: center; cursor: pointer; padding: 8px; border-radius: 4px; transition: background-color 0.2s; }
+        .level-selector label:hover { background-color: var(--hover-color); }
+        .level-selector input { margin-right: 8px; }
+        .audit-management { padding: 16px 24px; border-bottom: 1px solid var(--border-color); }
+        .audit-management label { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; display: block; }
+        .audit-management input[type="text"] { width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; }
+        .audit-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .audit-actions .btn { flex: 1; }
+        .nav { padding-bottom: 16px; }
+        .nav-item, .nav-link { padding: 12px 24px; cursor: pointer; transition: background-color 0.2s; display: flex; justify-content: space-between; align-items: center; gap: 16px; color: var(--text-primary); }
+        .nav-item { font-weight: 500; }
+        .nav-link i { color: var(--text-secondary); width: 20px; text-align: center; }
+        .nav-item:hover, .nav-link:hover { background-color: var(--hover-color); }
+        .nav-link.active, .nav-item.active { background-color: var(--secondary-color); color: var(--primary-color); font-weight: 700; }
+        .nav-link.active i, .nav-item.active i { color: var(--primary-color); }
+        .nav-item .icon { transition: transform 0.3s; }
+        .nav-item.active .icon { transform: rotate(90deg); }
+        .sub-nav { display: none; background-color: #fafafa; padding-left: 32px; border-left: 2px solid var(--border-color); margin-left: 24px; }
+        .sub-nav.active { display: block; }
+        .sub-nav-item { padding: 10px 16px; cursor: pointer; transition: background-color 0.2s, color 0.2s; font-size: 14px; color: var(--text-secondary); border-left: 2px solid transparent; }
+        .sub-nav-item:hover { background-color: var(--hover-color); color: var(--primary-color); }
+        .sub-nav-item.active { color: var(--primary-color); font-weight: 500; border-left-color: var(--primary-color); }
+        
+        .content { flex: 1; padding: 32px; margin-left: var(--sidebar-width); max-width: calc(100% - var(--sidebar-width)); transition: margin-left 0.3s ease; }
+        .content.full-width { margin-left: 0; max-width: 100%; }
+        .section { display: none; animation: fadeIn 0.5s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
+        .section-header h2 { color: var(--primary-color); font-size: 28px; font-weight: 400; margin-bottom: 8px; }
+        .section-header p { color: var(--text-secondary); font-size: 16px; }
+        .requirement { background-color: var(--white); border-radius: 8px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border-color); transition: box-shadow 0.2s; }
+        .requirement:hover { box-shadow: var(--shadow-heavy); }
+        .requirement-header { display: flex; align-items: center; cursor: pointer; gap: 16px; }
+        .requirement-number { font-weight: 500; color: var(--primary-color); font-size: 16px; }
+        .requirement-title { flex: 1; font-size: 16px; font-weight: 500; color: var(--text-primary); }
+        .level-badge { color: white; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+        .level-badge.base { background-color: var(--badge-base); }
+        .level-badge.intermediaire { background-color: var(--badge-inter); color: var(--text-primary); }
+        .requirement-content { display: none; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px; }
+        .requirement-content.active { display: block; }
+        .tabs { display: flex; margin-bottom: 0; border-bottom: 1px solid var(--border-color); overflow-x: auto; }
+        .tab { padding: 12px 16px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; font-size: 14px; color: var(--text-secondary); white-space: nowrap; }
+        .tab:hover { background-color: var(--hover-color); color: var(--text-primary); }
+        .tab.active { border-bottom: 2px solid var(--primary-color); font-weight: 500; color: var(--primary-color); }
+        .tab-content { display: none; padding: 16px; background-color: #fafafa; border: 1px solid var(--border-color); border-top: none; border-radius: 0 0 8px 8px; }
+        .tab-content.active { display: block; }
+        .tab-content ul, .tab-content ol { padding-left: 20px; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 32px; }
+        .dashboard-card { background: var(--white); padding: 24px; border-radius: 8px; box-shadow: var(--shadow-light); text-align: center; border-bottom: 4px solid var(--primary-color); transition: transform 0.2s, box-shadow 0.2s; }
+        .dashboard-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-heavy); }
+        .dashboard-card h3 { font-size: 16px; color: var(--text-secondary); margin-bottom: 16px; font-weight: 500; }
+        .dashboard-card .value { font-size: 32px; font-weight: 700; color: var(--primary-color); }
+        .summary-table { width: 100%; border-collapse: collapse; margin-top: 24px; background-color: var(--white); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow-light); }
+        .summary-table th, .summary-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .summary-table th { background-color: #f1f3f4; font-weight: 500; }
+        .summary-table tbody tr:hover { background-color: var(--hover-color); }
+        .summary-table tbody tr:last-child td { border-bottom: none; }
+        
+        .modal { display: flex; align-items: center; justify-content: center; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.5); opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        .modal.visible { opacity: 1; visibility: visible; }
+        .modal-content { background-color: var(--white); padding: 24px; border-radius: 8px; box-shadow: var(--shadow-heavy); width: 90%; max-width: 800px; position: relative; transform: scale(0.95); transition: transform 0.3s; }
+        .modal.visible .modal-content { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
+        .modal-header h2 { color: var(--primary-color); font-size: 20px; font-weight: 500; }
+        .close-button { color: var(--text-secondary); background: none; border: none; font-size: 24px; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .close-button:hover { background-color: var(--hover-color); }
+        #glossary-search { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 24px; margin-bottom: 16px; font-size: 16px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        #glossary-search:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2); }
+        #glossary-content { max-height: 60vh; overflow-y: auto; padding-right: 8px; }
+        .glossary-item { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
+        .glossary-item:last-child { border-bottom: none; }
+        .glossary-item dt { font-weight: 500; color: var(--primary-color); margin-bottom: 4px; }
+        .glossary-item dd { margin-left: 16px; color: var(--text-primary); }
+        
+        .back-to-top { position: fixed; bottom: 24px; right: 24px; background-color: var(--primary-color); color: var(--white); width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; opacity: 0; transition: opacity 0.3s, transform 0.3s; box-shadow: var(--shadow-heavy); z-index: 100; transform: translateY(20px); }
+        .back-to-top.visible { opacity: 1; transform: translateY(0); }
+        .back-to-top:hover { background-color: #004466; }
+        
+        .toast-container { position: fixed; bottom: 24px; left: 24px; z-index: 2000; }
+        .toast { display: flex; align-items: center; background-color: var(--white); color: var(--text-primary); border-radius: 4px; padding: 12px 16px; margin-bottom: 8px; box-shadow: var(--shadow-heavy); transform: translateX(-120%); opacity: 0; transition: transform 0.4s, opacity 0.4s; }
+        .toast.visible { transform: translateX(0); opacity: 1; }
+        .toast-icon { margin-right: 12px; font-size: 20px; }
+        .toast.success .toast-icon { color: var(--success-color); }
+        .toast.error .toast-icon { color: var(--error-color); }
+        .toast.info .toast-icon { color: var(--info-color); }
+        
+        .notes-container { margin-top: 16px; }
+        .notes-textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 4px; margin-top: 8px; font-size: 14px; resize: vertical; min-height: 100px; transition: border-color 0.2s; }
+        .notes-textarea:focus { outline: none; border-color: var(--primary-color); }
+        .note-meta { font-size: 12px; color: var(--text-secondary); text-align: right; margin-top: 4px; }
+        .progress-container { margin-top: 24px; background-color: var(--white); border-radius: 8px; padding: 24px; box-shadow: var(--shadow-light); }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .progress-title { font-size: 18px; color: var(--primary-color); }
+        .progress-bar-container { height: 8px; background-color: var(--border-color); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+        .progress-bar { height: 100%; background-color: var(--primary-color); border-radius: 4px; transition: width 0.3s ease; }
+        .progress-stats { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary); }
+        .progress-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+        .progress-item:last-child { border-bottom: none; }
+        .progress-checkbox { margin-right: 12px; width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+        .progress-text { flex: 1; cursor: pointer; }
+        .progress-text.completed { text-decoration: line-through; color: var(--text-secondary); }
+        
+        .btn { background-color: transparent; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s; color: var(--text-primary); }
+        .btn-primary { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .btn-primary:hover { background-color: #004466; border-color: #004466; }
+        .btn:hover { background-color: var(--hover-color); }
+        .btn-icon { display: flex; align-items: center; justify-content: center; gap: 8px; }
+        #import-file-input { display: none; }
+        
+        @media (max-width: 768px) {
+            .header { padding: 0 8px; }
+            .search-bar { display: none; }
+            .logo h1 { display: none; }
+            .sidebar { width: 260px; transform: translateX(-100%); box-shadow: var(--shadow-heavy); }
+            .sidebar.visible { transform: translateX(0); }
+            .content { margin-left: 0; padding: 16px; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <button class="menu-button" id="menu-toggle"><i class="fas fa-bars"></i></button>
+        <div class="logo">
+            <img src="https://sohiscert.com/wp-content/uploads/2015/05/ifs01.jpg" alt="IFS Logo">
+            <h1>Guide Auditeur IFS Progress v3.0</h1>
+        </div>
+        <div class="search-container">
+            <div class="search-bar">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="global-search" placeholder="Rechercher (ex: 4.1.1, traçabilité)...">
+            </div>
+            <div class="search-results" id="search-results"></div>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar hidden" id="sidebar">
+            <div class="audit-management">
+                <label for="site-name-input">📍 Site Audité / Session</label>
+                <input type="text" id="site-name-input" placeholder="Ex: Audit Usine de Lyon">
+                <div class="audit-actions">
+                    <button id="import-btn" class="btn btn-icon"><i class="fas fa-upload"></i> Importer</button>
+                    <input type="file" id="import-file-input" accept=".json">
+                    <button id="export-btn" class="btn btn-icon"><i class="fas fa-download"></i> Exporter</button>
+                </div>
+            </div>
+            <div class="level-selector" id="level-selector">
+                <label><input type="radio" name="level" value="Tous" checked> 📊 Tous</label>
+                <label><input type="radio" name="level" value="Base"> 🎯 Base</label>
+                <label><input type="radio" name="level" value="Intermédiaire"> 🚀 Intermédiaire</label>
+            </div>
+            <nav class="nav" id="navigation-menu"></nav>
+        </aside>
+
+        <main class="content full-width" id="main-content"></main>
+    </div>
+    
+    <div id="glossary-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📚 Glossaire IFS Progress Food</h2>
+                <button class="close-button" id="close-glossary">×</button>
+            </div>
+            <input type="text" id="glossary-search" class="search-input" placeholder="Rechercher un terme...">
+            <div id="glossary-content"></div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+    <div class="back-to-top" id="back-to-top"><i class="fas fa-arrow-up"></i></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Elements du DOM
+        const elements = {
+            sidebar: document.getElementById('sidebar'),
+            mainContent: document.getElementById('main-content'),
+            navMenu: document.getElementById('navigation-menu'),
+            menuToggle: document.getElementById('menu-toggle'),
+            levelSelector: document.getElementById('level-selector'),
+            globalSearch: document.getElementById('global-search'),
+            searchResults: document.getElementById('search-results'),
+            glossaryModal: document.getElementById('glossary-modal'),
+            closeGlossary: document.getElementById('close-glossary'),
+            glossaryContent: document.getElementById('glossary-content'),
+            glossarySearch: document.getElementById('glossary-search'),
+            backToTopButton: document.getElementById('back-to-top'),
+            toastContainer: document.getElementById('toast-container'),
+            siteNameInput: document.getElementById('site-name-input'),
+            importBtn: document.getElementById('import-btn'),
+            exportBtn: document.getElementById('export-btn'),
+            importFileInput: document.getElementById('import-file-input')
+        };
+
+        let ifsData = [];
+        let state = { currentLevel: 'Tous', currentView: 'dashboard', progress: {}, notes: {}, siteName: '' };
+
+        // Glossaire IFS Progress
+        const glossaryData = [
+            { term: "Accord avec les clients", definition: "Entente négociée et généralement légalement exécutoire entre un client et une société." },
+            { term: "Action corrective", definition: "Action visant à éliminer la cause d'une non-conformité détectée. Mise en place avant l'évaluation de renouvellement." },
+            { term: "APP (Approche Produits et Procédés)", definition: "Méthode d'évaluation IFS qui évalue la conformité avec les spécifications clients et la conformité réglementaire." },
+            { term: "CCP (Point Critique pour la Maîtrise)", definition: "Étape essentielle pour prévenir, éliminer ou réduire un danger lié à la sécurité des aliments." },
+            { term: "Correction", definition: "Action pour éliminer une non-conformité détectée. Mise en place dans les 3 mois suivant l'évaluation." },
+            { term: "Déviation", definition: "Non-respect partiel d'une exigence (notes B, C, D) nécessitant des améliorations." },
+            { term: "Évaluation complémentaire", definition: "Évaluation pour résoudre une non-conformité majeure unique avec note ≥ 75%." },
+            { term: "Food defence", definition: "Protection des aliments contre les actes malveillants, sabotage ou terrorisme." },
+            { term: "Fraude alimentaire", definition: "Substitution, étiquetage erroné ou contrefaçon intentionnels pour un gain économique." },
+            { term: "Niveau de base", definition: "Premier niveau IFS Progress: 127 exigences (≈45% IFS Food). Durée max: 1 an." },
+            { term: "Niveau intermédiaire", definition: "Deuxième niveau: 201 exigences (≈70% IFS Food). Inclut toutes les exigences de base." },
+            { term: "Non-conformité majeure", definition: "Manquement critique (-10% score). Empêche la délivrance de la lettre de confirmation." },
+            { term: "Plan d'actions", definition: "Document détaillant corrections (3 mois) et actions correctives (12 mois)." },
+            { term: "Validation", definition: "Preuves objectives qu'une mesure de maîtrise sera efficace contre un danger." },
+            { term: "Vérification", definition: "Confirmation que les exigences spécifiées ont été satisfaites par des preuves objectives." }
+        ].sort((a,b) => a.term.localeCompare(b.term));
+
+        // Fonctions utilitaires
+        const loadState = () => {
+            state.progress = JSON.parse(localStorage.getItem('ifsProgressTracker')) || {};
+            state.notes = JSON.parse(localStorage.getItem('ifsProgressNotes')) || {};
+            state.siteName = localStorage.getItem('ifsProgressSiteName') || '';
+            elements.siteNameInput.value = state.siteName;
+        };
+
+        const saveState = (key, showMsg = true) => {
+            const itemName = `ifsProgress${key.charAt(0).toUpperCase() + key.slice(1)}`;
+            const dataToSave = (key === 'siteName') ? state[key] : JSON.stringify(state[key]);
+            localStorage.setItem(itemName, dataToSave);
+            if(showMsg) showToast(`${key} sauvegardé avec succès`, "success");
+        };
+
+        const saveNote = (reqId, noteText) => {
+            if (noteText.trim()) {
+                state.notes[reqId] = { text: noteText, date: new Date().toLocaleString('fr-FR') };
+            } else {
+                delete state.notes[reqId];
+            }
+            saveState('notes', false);
+        };
+
+        const showToast = (message, type = 'info') => {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icons = { info: 'fa-info-circle', success: 'fa-check-circle', error: 'fa-exclamation-circle' };
+            toast.innerHTML = `<i class="fas ${icons[type]} toast-icon"></i><div class="toast-message">${message}</div>`;
+            elements.toastContainer.appendChild(toast);
+            setTimeout(() => toast.classList.add('visible'), 10);
+            setTimeout(() => {
+                toast.classList.remove('visible');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 3000);
+        };
+
+        const formatTextForHTML = (text) => {
+            if (!text) return '<p><i>Non défini dans le référentiel.</i></p>';
+            let content = Array.isArray(text) ? text.map(i => `• ${i}`).join('\n') : text;
+            content = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            content = content.replace(/^\s*•\s*(.*)/gm, '<li>$1</li>');
+            if (content.includes('<li>')) {
+                content = '<ul>' + content.replace(/<\/li>\s*<li>/g, '</li><li>').replace(/<br>/g, '') + '</ul>';
+            }
+            return `<div style="white-space: pre-wrap; line-height: 1.6;">${content.replace(/\n/g, '<br>')}</div>`;
+        };
+
+        // Fonctions d'affichage
+        const showDashboard = () => {
+            let totalReqs = 0, completedReqs = 0, baseReqs = 0, intermediateReqs = 0;
+            const notesCount = Object.keys(state.notes).length;
+            
+            ifsData.forEach(chapter => {
+                chapter.sous_sections.forEach(subsection => {
+                    subsection.exigences.forEach(req => {
+                        totalReqs++;
+                        if (req.niveau === 'Base') baseReqs++;
+                        if (req.niveau === 'Intermédiaire') intermediateReqs++;
+                        if (state.progress[req.numero.replace(/[^a-zA-Z0-9]/g, '')]) completedReqs++;
+                    });
+                });
+            });
+            
+            const progressPercentage = totalReqs > 0 ? ((completedReqs / totalReqs) * 100).toFixed(1) : 0;
+
+            elements.mainContent.innerHTML = `
+                <div class="section active">
+                    <div class="section-header">
+                        <h2>🏠 Tableau de Bord - Guide Auditeur IFS Progress Food</h2>
+                        <p>Bienvenue dans votre outil d'accompagnement pour les évaluations IFS Progress Food v3.0</p>
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>📊 Progression Globale</h3>
+                            <div class="value">${progressPercentage}%</div>
+                            <p>${completedReqs} / ${totalReqs} exigences</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>🎯 Niveau de Base</h3>
+                            <div class="value">${baseReqs}</div>
+                            <p>exigences (≈45% IFS Food)</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>🚀 Niveau Intermédiaire</h3>
+                            <div class="value">${intermediateReqs}</div>
+                            <p>exigences (≈70% IFS Food)</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>📝 Notes d'Audit</h3>
+                            <div class="value">${notesCount}</div>
+                            <p>Notes personnalisées</p>
+                        </div>
+                    </div>
+
+                    <div class="requirement">
+                        <h3>📋 À propos de l'IFS Progress Food v3.0</h3>
+                        <div class="tab-content active">
+                            <h4>🎯 Objectifs du programme</h4>
+                            <ul>
+                                <li><strong>Développement progressif :</strong> Accompagner les PME vers la certification IFS Food</li>
+                                <li><strong>Approche par étapes :</strong> Progression du niveau de base vers l'intermédiaire</li>
+                                <li><strong>Amélioration continue :</strong> Système de notation et plan d'actions</li>
+                                <li><strong>Reconnaissance mutuelle :</strong> Acceptation dans la chaîne d'approvisionnement</li>
+                            </ul>
+
+                            <h4>📈 Structure du programme</h4>
+                            <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                                <strong>Étape 0 :</strong> Auto-évaluation ou pré-évaluation<br>
+                                <strong>Étape 1 :</strong> Niveau de Base (127 exigences) - Durée max : 1 an<br>
+                                <strong>Étape 2 :</strong> Niveau Intermédiaire (201 exigences) - Durée max : 1 an<br>
+                                <strong>Étape 3 :</strong> Certification IFS Food complète (232 exigences)
+                            </div>
+
+                            <h4>⚖️ Système de notation</h4>
+                            <table class="summary-table">
+                                <thead>
+                                    <tr><th>Note</th><th>Description</th><th>Points</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td><strong>A</strong></td><td>Conformité totale</td><td>20 points</td></tr>
+                                    <tr><td><strong>B</strong></td><td>Conformité presque totale</td><td>15 points</td></tr>
+                                    <tr><td><strong>C</strong></td><td>Conformité partielle</td><td>5 points</td></tr>
+                                    <tr><td><strong>D</strong></td><td>Non-conformité</td><td>0 point</td></tr>
+                                    <tr><td><strong>Majeure</strong></td><td>Non-conformité critique</td><td>-10% du total</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`;
+        };
+
+        const showAuditTechniques = () => {
+            elements.mainContent.innerHTML = `
+                <div class="section active">
+                    <div class="section-header">
+                        <h2>🎓 Techniques d'Audit et Bonnes Pratiques</h2>
+                        <p>Guide méthodologique pour les évaluateurs IFS Progress Food</p>
+                    </div>
+
+                    <div class="requirement">
+                        <div class="requirement-header">
+                            <span class="requirement-title">🔍 Approche Produits et Procédés (APP)</span>
+                        </div>
+                        <div class="requirement-content active">
+                            <div class="tab-content active">
+                                <h4>Principe fondamental</h4>
+                                <p>L'évaluation IFS Progress Food est basée sur l'<strong>Approche Produits et Procédés (APP)</strong> qui évalue si les activités de transformation sont capables de produire des produits sûrs, légaux et conformes.</p>
+                                
+                                <h4>🎯 Points clés de l'APP</h4>
+                                <ul>
+                                    <li><strong>Échantillonnage de produits :</strong> Sélectionner des produits représentatifs</li>
+                                    <li><strong>Fil conducteur :</strong> Suivre le flux de production du produit sélectionné</li>
+                                    <li><strong>Conformité réglementaire :</strong> Vérifier selon les pays de production et destination</li>
+                                    <li><strong>Spécifications clients :</strong> S'assurer de la conformité aux exigences contractuelles</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="requirement">
+                        <div class="requirement-header">
+                            <span class="requirement-title">⚖️ Système de notation IFS Progress</span>
+                        </div>
+                        <div class="requirement-content">
+                            <div class="tab-content active">
+                                <h4>🎯 Critères d'attribution des notes</h4>
+                                <table class="summary-table">
+                                    <thead>
+                                        <tr><th>Note</th><th>Critères</th><th>Exemples</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td><strong>A</strong></td><td>Conformité totale, système optimal</td><td>Procédures complètes, appliquées et efficaces</td></tr>
+                                        <tr><td><strong>B</strong></td><td>Conformité avec améliorations mineures</td><td>Procédures en place mais perfectibles</td></tr>
+                                        <tr><td><strong>C</strong></td><td>Conformité partielle</td><td>Lacunes importantes mais système fonctionnel</td></tr>
+                                        <tr><td><strong>D</strong></td><td>Non-conformité</td><td>Absence de système ou inefficacité avérée</td></tr>
+                                    </tbody>
+                                </table>
+
+                                <h4>🚨 Non-conformités majeures</h4>
+                                <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 16px 0;">
+                                    <strong>Critères d'attribution :</strong>
+                                    <ul>
+                                        <li>Manquement substantiel à la sécurité des aliments</li>
+                                        <li>Non-respect des exigences légales</li>
+                                        <li>Perte de maîtrise d'un procédé critique</li>
+                                        <li>Risque avéré pour le consommateur</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        };
+
+        const showProgressTracker = () => {
+            let totalReqs = 0, completedReqs = 0;
+            const allReqs = ifsData.flatMap(c => c.sous_sections.flatMap(ss => ss.exigences.map(req => ({...req, chapterNum: c.chapitre, subSectionNum: ss.sous_section}))));
+            
+            const filteredReqs = allReqs.filter(req => 
+                state.currentLevel === 'Tous' || req.niveau === state.currentLevel || (state.currentLevel === 'Intermédiaire' && req.niveau === 'Base')
+            );
+            
+            filteredReqs.forEach(req => {
+                totalReqs++;
+                if (state.progress[req.numero.replace(/[^a-zA-Z0-9]/g, '')]) completedReqs++;
+            });
+            
+            const progressPercentage = totalReqs > 0 ? ((completedReqs / totalReqs) * 100).toFixed(1) : 0;
+            
+            const progressHtml = ifsData.map(chapter => `
+                <div class="requirement">
+                    <h3>${chapter.chapitre}. ${chapter.titre}</h3>
+                    <div class="progress-items">
+                    ${chapter.sous_sections.flatMap(ss => ss.exigences.filter(req => 
+                        state.currentLevel === 'Tous' || req.niveau === state.currentLevel || (state.currentLevel === 'Intermédiaire' && req.niveau === 'Base')
+                    )).map(req => {
+                        const reqId = req.numero.replace(/[^a-zA-Z0-9]/g, '');
+                        const isCompleted = state.progress[reqId];
+                        const subsection = chapter.sous_sections.find(ss => ss.exigences.includes(req));
+                        return `<div class="progress-item">
+                                    <input type="checkbox" class="progress-checkbox" data-req-id="${reqId}" ${isCompleted ? 'checked' : ''}>
+                                    <div class="progress-text ${isCompleted ? 'completed' : ''}" data-view="chap${chapter.chapitre}-sec${subsection.sous_section.replace(/\./g, '_')}" data-req-id="${reqId}">
+                                        <strong>${req.numero}</strong> 
+                                        <span class="level-badge ${req.niveau.toLowerCase().replace('é', 'e')}" style="margin: 0 8px;">${req.niveau}</span>
+                                        - ${req.texte.split('\n')[0]}
+                                    </div>
+                                </div>`;
+                    }).join('')}
+                    </div>
+                </div>`).join('');
+            
+            elements.mainContent.innerHTML = `
+                <div class="section active">
+                    <div class="section-header">
+                        <h2>📈 Suivi de Progression - Niveau ${state.currentLevel}</h2>
+                        <p>Suivez votre avancement dans l'évaluation IFS Progress Food. Cochez les exigences au fur et à mesure.</p>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <div class="progress-title">🎯 Progression Globale - Niveau ${state.currentLevel}</div>
+                            <button id="reset-progress" class="btn btn-icon" style="background: #dc2626; color: white;">
+                                <i class="fas fa-trash"></i> Réinitialiser
+                            </button>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${progressPercentage}%;"></div>
+                        </div>
+                        <div class="progress-stats">
+                            <span><strong>${completedReqs} / ${totalReqs} exigences complétées</strong></span>
+                            <span><strong>${progressPercentage}% terminé</strong></span>
+                        </div>
+                    </div>
+
+                    ${progressHtml}
+                </div>`;
+        };
+
+        const displaySection = () => {
+            const match = state.currentView.match(/chap(\d+)-sec([\d_]+)/);
+            if (!match) return;
+            const chapter = ifsData.find(c => c.chapitre === match[1]);
+            const subsection = chapter?.sous_sections.find(s => s.sous_section === match[2].replace(/_/g, '.'));
+            if (!subsection) return;
+
+            const filteredReqs = subsection.exigences.filter(req => 
+                state.currentLevel === 'Tous' || req.niveau === state.currentLevel || (state.currentLevel === 'Intermédiaire' && req.niveau === 'Base')
+            );
+            
+            const requirementsHtml = filteredReqs.map(req => {
+                const reqId = req.numero.replace(/[^a-zA-Z0-9]/g, '');
+                const note = state.notes[reqId] || { text: '', date: '' };
+
+                return `
+                    <div class="requirement" id="req-${reqId}">
+                        <div class="requirement-header">
+                            <span class="requirement-number">${req.numero}</span>
+                            <span class="requirement-title">${req.texte.split('\n')[0]}</span>
+                            <span class="level-badge ${req.niveau.toLowerCase().replace('é', 'e')}">${req.niveau}</span>
+                        </div>
+                        <div class="requirement-content">
+                            <div class="tabs">
+                                <div class="tab active" data-tab-content="details-${reqId}">📋 Détails</div>
+                                <div class="tab" data-tab-content="objectif-${reqId}">🎯 Objectif</div>
+                                <div class="tab" data-tab-content="questions-${reqId}">❓ Questions</div>
+                                <div class="tab" data-tab-content="preuves-${reqId}">📄 Preuves</div>
+                                <div class="tab" data-tab-content="notes-${reqId}">📝 Mes Notes</div>
+                            </div>
+                            <div id="details-${reqId}" class="tab-content active">${formatTextForHTML(req.texte)}</div>
+                            <div id="objectif-${reqId}" class="tab-content">${formatTextForHTML(req.onglets.explications)}</div>
+                            <div id="questions-${reqId}" class="tab-content">${formatTextForHTML(req.onglets.questionsExemple)}</div>
+                            <div id="preuves-${reqId}" class="tab-content">${formatTextForHTML(req.onglets.exemples_preuves)}</div>
+                            <div id="notes-${reqId}" class="tab-content">
+                                <textarea class="notes-textarea" data-req-id="${reqId}" placeholder="Saisir vos notes d'audit ici...">${note.text}</textarea>
+                                <div class="note-meta">${note.date ? `Dernière modification : ${note.date}` : ''}</div>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            elements.mainContent.innerHTML = `
+                <div class="section active">
+                    <div class="section-header">
+                        <h2>${subsection.sous_section} ${subsection.titre}</h2>
+                        <p>📂 Chapitre ${chapter.chapitre}: ${chapter.titre} | 🎯 Niveau: ${state.currentLevel}</p>
+                    </div>
+                    ${filteredReqs.length > 0 ? requirementsHtml : `
+                        <div class="requirement">
+                            <div style="text-align: center; padding: 40px;">
+                                <h3>🔍 Aucune exigence trouvée</h3>
+                                <p>Aucune exigence pour le niveau "<strong>${state.currentLevel}</strong>" dans cette section.</p>
+                            </div>
+                        </div>
+                    `}
+                </div>`;
+        };
+
+        const buildNavigation = () => {
+            elements.navMenu.innerHTML = `
+                <div class="nav-link" data-view="dashboard"><i class="fas fa-chart-pie fa-fw"></i><span>🏠 Tableau de Bord</span></div>
+                <div class="nav-link" data-view="process"><i class="fas fa-graduation-cap fa-fw"></i><span>🎓 Techniques d'Audit</span></div>
+                <div class="nav-link" data-view="progress"><i class="fas fa-tasks fa-fw"></i><span>📈 Suivi de Progression</span></div>
+                <div class="nav-link" id="glossary-button"><i class="fas fa-book fa-fw"></i><span>📚 Glossaire</span></div>
+                <hr style="border:none; border-top:1px solid var(--border-color); margin:8px 16px;">
+            `;
+            ifsData.forEach(chapter => {
+                const navItem = document.createElement('div');
+                navItem.className = 'nav-item';
+                navItem.dataset.target = `nav-chap-${chapter.chapitre}`;
+                navItem.innerHTML = `<span>${chapter.chapitre}. ${chapter.titre}</span><i class="fas fa-chevron-right icon"></i>`;
+                const subNav = document.createElement('div');
+                subNav.className = 'sub-nav';
+                subNav.id = `nav-chap-${chapter.chapitre}`;
+                chapter.sous_sections.forEach(subsection => {
+                    const subNavItem = document.createElement('div');
+                    subNavItem.className = 'sub-nav-item';
+                    subNavItem.dataset.view = `chap${chapter.chapitre}-sec${subsection.sous_section.replace(/\./g, '_')}`;
+                    subNavItem.textContent = `${subsection.sous_section} ${subsection.titre}`;
+                    subNav.appendChild(subNavItem);
+                });
+                elements.navMenu.appendChild(navItem);
+                elements.navMenu.appendChild(subNav);
+            });
+        };
+
+        const renderView = () => {
+            const viewHandlers = {
+                dashboard: showDashboard, 
+                process: showAuditTechniques, 
+                progress: showProgressTracker
+            };
+            const handler = viewHandlers[state.currentView];
+            if (handler) {
+                handler();
+            } else if (state.currentView && state.currentView.startsWith('chap')) {
+                displaySection();
+            } else {
+                showDashboard();
+            }
+            updateActiveNav();
+        };
+
+        const updateActiveNav = () => {
+            document.querySelectorAll('.nav-link.active, .sub-nav-item.active, .nav-item.active, .sub-nav.active').forEach(el => el.classList.remove('active'));
+            const activeItem = document.querySelector(`[data-view="${state.currentView}"]`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+                const parentSubNav = activeItem.closest('.sub-nav');
+                if (parentSubNav) {
+                    parentSubNav.classList.add('active');
+                    document.querySelector(`.nav-item[data-target="${parentSubNav.id}"]`)?.classList.add('active');
+                }
+            }
+        };
+
+        const buildGlossary = () => {
+            const searchTerm = elements.glossarySearch.value.toLowerCase();
+            const filteredData = glossaryData.filter(item => 
+                item.term.toLowerCase().includes(searchTerm) || 
+                item.definition.toLowerCase().includes(searchTerm)
+            );
+            
+            elements.glossaryContent.innerHTML = `
+                <dl>${filteredData.map(item => `
+                    <div class="glossary-item">
+                        <dt style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-bookmark" style="color: var(--primary-color);"></i>
+                            ${item.term}
+                        </dt>
+                        <dd style="margin-left: 24px; line-height: 1.6;">
+                            ${item.definition}
+                        </dd>
+                    </div>
+                `).join('')}</dl>
+            `;
+        };
+
+        const handleSearch = (term) => {
+            const searchTerm = term.trim().toLowerCase();
+            elements.searchResults.innerHTML = '';
+            if (searchTerm.length < 2) {
+                elements.searchResults.style.display = 'none';
+                return;
+            }
+            
+            const results = [];
+            ifsData.forEach(chapter => {
+                chapter.sous_sections.forEach(subsection => {
+                    subsection.exigences.filter(req => 
+                        state.currentLevel === 'Tous' || req.niveau === state.currentLevel || (state.currentLevel === 'Intermédiaire' && req.niveau === 'Base')
+                    ).forEach(req => {
+                        const searchableText = `${req.numero} ${req.texte}`.toLowerCase();
+                        
+                        if (searchableText.includes(searchTerm)) {
+                            results.push({
+                                numero: req.numero,
+                                texte: req.texte.split('\n')[0],
+                                niveau: req.niveau,
+                                view: `chap${chapter.chapitre}-sec${subsection.sous_section.replace(/\./g, '_')}`,
+                                reqId: req.numero.replace(/[^a-zA-Z0-9]/g, '')
+                            });
+                        }
+                    });
+                });
+            });
+            
+            if (results.length > 0) {
+                elements.searchResults.innerHTML = results.slice(0, 10).map(r => `
+                    <div class="search-result-item" data-view="${r.view}" data-req-id="${r.reqId}">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <strong style="color: var(--primary-color);">${r.numero}</strong>
+                            <span class="level-badge ${r.niveau.toLowerCase().replace('é', 'e')}" style="font-size: 10px;">${r.niveau}</span>
+                        </div>
+                        <span>${r.texte}</span>
+                    </div>
+                `).join('');
+                elements.searchResults.style.display = 'block';
+            } else {
+                elements.searchResults.innerHTML = `<div class="search-result-item"><span>Aucun résultat trouvé.</span></div>`;
+                elements.searchResults.style.display = 'block';
+            }
+        };
+
+        const init = async () => {
+            showToast("Chargement des données IFS Progress Food...", "info");
+            ifsData = await fetch('https://raw.githubusercontent.com/M00N69/CSVINSIGHT/main/IFSPROGRESSGEMv0.json').then(res => res.json()).catch(err => {
+                console.error("Failed to load JSON:", err);
+                showToast("Erreur de chargement des données.", "error"); 
+                return null;
+            });
+            if (ifsData) {
+                loadState();
+                buildNavigation();
+                renderView();
+                setupEventListeners();
+                buildGlossary();
+                showToast("Guide auditeur IFS Progress Food chargé avec succès!", "success");
+            } else {
+                elements.mainContent.innerHTML = `
+                    <h1>Erreur de chargement</h1>
+                    <p>Les données n'ont pas pu être chargées.</p>
+                    <button onclick="location.reload()" class="btn btn-primary">Recharger</button>
+                `;
+            }
+        };
+
+        const setupEventListeners = () => {
+            elements.menuToggle.addEventListener('click', () => {
+                elements.sidebar.classList.toggle('hidden');
+                elements.mainContent.classList.toggle('full-width');
+            });
+
+            elements.navMenu.addEventListener('click', e => {
+                const target = e.target.closest('[data-view], .nav-item, #glossary-button');
+                if (!target) return;
+
+                if (target.id === 'glossary-button') {
+                    elements.glossaryModal.classList.add('visible');
+                } else if (target.dataset.view) {
+                    state.currentView = target.dataset.view;
+                    renderView();
+                } else if (target.matches('.nav-item')) {
+                    target.classList.toggle('active');
+                    document.getElementById(target.dataset.target)?.classList.toggle('active');
+                }
+                if (window.innerWidth <= 768) elements.sidebar.classList.add('hidden');
+            });
+            
+            elements.mainContent.addEventListener('click', e => {
+                const reqHeader = e.target.closest('.requirement-header');
+                const tab = e.target.closest('.tab');
+                const progressCheckbox = e.target.closest('.progress-checkbox');
+                const progressText = e.target.closest('.progress-text');
+                const resetProgress = e.target.closest('#reset-progress');
+
+                if (reqHeader) reqHeader.nextElementSibling.classList.toggle('active');
+                if (tab) {
+                    const contentId = tab.dataset.tabContent;
+                    tab.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    tab.closest('.requirement-content').querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById(contentId).classList.add('active');
+                }
+                if (progressCheckbox) {
+                    state.progress[progressCheckbox.dataset.reqId] = progressCheckbox.checked;
+                    saveState('progress');
+                    renderView();
+                }
+                if(progressText && !progressCheckbox) {
+                    state.currentView = progressText.dataset.view;
+                    renderView();
+                    setTimeout(() => document.getElementById(`req-${progressText.dataset.reqId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+                }
+                if(resetProgress) {
+                    if (confirm("Voulez-vous vraiment réinitialiser votre progression ?")) {
+                        state.progress = {};
+                        saveState('progress', false);
+                        showToast("Progression réinitialisée.", "info");
+                        renderView();
+                    }
+                }
+            });
+
+            elements.mainContent.addEventListener('blur', e => {
+                if (e.target.matches('.notes-textarea')) {
+                    saveNote(e.target.dataset.reqId, e.target.value);
+                }
+            }, true);
+
+            elements.levelSelector.addEventListener('change', e => {
+                state.currentLevel = e.target.value;
+                if (state.currentView.startsWith('chap') || state.currentView === 'progress') renderView();
+            });
+            
+            elements.globalSearch.addEventListener('input', e => handleSearch(e.target.value));
+            document.addEventListener('click', e => {
+                if (!e.target.closest('.search-container')) elements.searchResults.style.display = 'none';
+            });
+            
+            elements.searchResults.addEventListener('click', e => {
+                const item = e.target.closest('.search-result-item');
+                if (item) {
+                    state.currentView = item.dataset.view;
+                    renderView();
+                    setTimeout(() => {
+                        const reqEl = document.getElementById(`req-${item.dataset.reqId}`);
+                        reqEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        reqEl?.querySelector('.requirement-content').classList.add('active');
+                    }, 100);
+                    elements.searchResults.style.display = 'none';
+                    elements.globalSearch.value = '';
+                }
+            });
+
+            elements.closeGlossary.onclick = () => elements.glossaryModal.classList.remove('visible');
+            elements.glossarySearch.addEventListener('input', buildGlossary);
+            window.onclick = (e) => { if (e.target == elements.glossaryModal) elements.glossaryModal.classList.remove('visible'); };
+            
+            elements.backToTopButton.addEventListener('click', () => window.scrollTo({ top: 0 }));
+            window.addEventListener('scroll', () => elements.backToTopButton.classList.toggle('visible', window.scrollY > 300));
+            
+            elements.siteNameInput.addEventListener('blur', e => {
+                state.siteName = e.target.value;
+                saveState('siteName', false);
+            });
+
+            elements.importBtn.addEventListener('click', () => elements.importFileInput.click());
+            elements.importFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        if (data.progress && data.notes && data.metadata) {
+                            state.progress = data.progress;
+                            state.notes = data.notes;
+                            state.siteName = data.metadata.siteName;
+                            elements.siteNameInput.value = state.siteName;
+                            saveState('progress', false);
+                            saveState('notes', false);
+                            saveState('siteName', false);
+                            renderView();
+                            showToast("Données importées avec succès !", "success");
+                        } else {
+                            throw new Error("Format de fichier invalide.");
+                        }
+                    } catch (err) {
+                        showToast("Erreur: Fichier invalide.", "error");
+                        console.error(err);
+                    } finally {
+                        elements.importFileInput.value = '';
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            elements.exportBtn.addEventListener('click', () => {
+                const siteName = state.siteName || 'Evaluation';
+                const date = new Date().toISOString().split('T')[0];
+                const filename = `IFS_Progress_${siteName}_${date}.json`;
+                const dataToExport = {
+                    metadata: { 
+                        siteName: state.siteName, 
+                        exportDate: new Date().toISOString(), 
+                        standard: 'IFS Progress Food v3.0' 
+                    },
+                    progress: state.progress,
+                    notes: state.notes
+                };
+                const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {type: 'application/json'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+                URL.revokeObjectURL(link.href);
+                showToast("Données exportées avec succès !", "success");
+            });
+        };
+        
+        init();
+    });
+    </script>
+</body>
+</html>
